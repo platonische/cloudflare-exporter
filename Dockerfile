@@ -13,11 +13,14 @@ RUN CGO_ENABLED=0 GOOS=linux go build --ldflags '-w -s -extldflags "-static"' -o
 
 FROM alpine:3.19
 
-RUN apk update && apk add ca-certificates
+RUN apk update && apk add ca-certificates curl
 
 COPY --from=builder /app/cloudflare_exporter cloudflare_exporter
 
 ENV CF_API_KEY ""
 ENV CF_API_EMAIL ""
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:9199/metrics || exit 1
 
 ENTRYPOINT [ "./cloudflare_exporter" ]
